@@ -23,7 +23,7 @@ for root in Infra-Code-Terraform/azure-*; do
 done
 ```
 
-Dependencies and Terraform providers require network access. For deployment, supply your own Azure subscription, storage backend, SSH public key, GitLab runners and masked variables, Vault roles, registry and image references. The Flux repository and credentials must point to your own GitOps repository with matching paths. The included GitLab files represent separate pipeline roots; review them before importing. Do not execute their manual apply/destroy jobs against a shared environment. No Azure infrastructure is deployed by the local checks.
+Dependencies and Terraform providers require network access. For deployment, supply your own Azure subscription, storage backend, SSH public key, GitLab runners and masked variables, Vault roles, registry and image references. The Flux repository and credentials must point to your own GitOps repository with matching paths. The included GitLab files represent separate pipeline roots; review them before importing. Application pipelines use lockfile installs and block on image scan findings; registry publication is manual. Manifest updates should be proposed separately in your own GitOps repository, not pushed to an inherited repository. Do not execute their manual apply/destroy jobs against a shared environment. No Azure infrastructure is deployed by the local checks.
 
 See the original [architecture walkthrough](https://medium.com/@amanpathakdevops/advanced-end-to-end-devsecops-kubernetes-three-tier-project-using-azure-aks-fluxcd-prometheus-cca3c5e61953).
 
