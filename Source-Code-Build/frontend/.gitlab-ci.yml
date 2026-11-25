@@ -6,19 +6,17 @@ stages:
   - image-scan
   - dp-check
   - image-push
-  - cloning repo
-  - updating deployment file
 
 variables:
   DOCKER_DRIVER: overlay2
-  CI_DEBUG_TRACE: "true"
+  CI_DEBUG_TRACE: "false"
 
 Installing Dependency:
   stage: npm
   tags:
     - frontend
   script:
-    - npm install
+    - npm ci
 
 
 # Checking Code Vulnerabilities
@@ -36,7 +34,7 @@ sonarqube-check:
       - .sonar/cache
   script: 
     - sonar-scanner
-  allow_failure: true
+  allow_failure: false
   only:
     - main
 
@@ -77,7 +75,7 @@ Image Scaning using Trivy:
     - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
   script:
     - mkdir -p trivy-image-scan
-    - trivy image --severity HIGH,CRITICAL $FRONTEND_ACR_USERNAME/frontend:$CI_PIPELINE_IID -o trivy-image-scan/trivy-image-scan-frontend:$CI_PIPELINE_IID.txt
+    - trivy image --severity HIGH,CRITICAL --exit-code 1 $FRONTEND_ACR_USERNAME/frontend:$CI_PIPELINE_IID -o trivy-image-scan/trivy-image-scan-frontend:$CI_PIPELINE_IID.txt
   artifacts:
     untracked: false
     when: on_success
@@ -109,42 +107,10 @@ Image Pushing to ACR:
   image:
     name: docker:latest
   services:
-    - docker:bind
+    - docker:dind
   before_script:
     - echo "$FRONTEND_ACR_PASSWORD" | docker login $FRONTEND_ACR_USERNAME -u $FRONTEND_ACR_REGISTRY --password-stdin
   script: 
     - docker push $FRONTEND_ACR_USERNAME/frontend:$CI_PIPELINE_IID
     - docker rmi -f $FRONTEND_ACR_USERNAME/frontend:$CI_PIPELINE_IID
-
-# Cloning the Manifest Repo
-Repo Cloning:
-  stage: cloning repo
-  tags:
-    - frontend
-  script:
-    - git clone https://oauth2:$GITLAB_TOKEN@gitlab.com/azure-devsecops-project/kubernetes-manifests/manifests.git
-  artifacts:
-    paths:
-      - manifests/
-    expire_in: 1 week
-
-
-# Updating & Pushing Changes
-Updating Image tag:
-  stage: updating deployment file
-  tags:
-    - frontend
-  script:
-    - cd manifests/Frontend/
-    - imageTag=$(grep -oP '(?<=frontend:)[^ ]+' deployment.yaml)
-    - echo $imageTag
-    - sed -i "s/${FRONTEND_ACR_USERNAME}\/frontend:$imageTag/${FRONTEND_ACR_USERNAME}\/frontend:$CI_PIPELINE_IID/" deployment.yaml
-    - git config --global user.email ${GITLAB_ID}
-    - git config --global user.name ${GITLAB_USERNAME}
-    - git status
-    - git add deployment.yaml
-    - git status
-    - git commit -m "Update deployment Image to version $CI_PIPELINE_IID"
-    - git status
-    - git push origin main
   when: manual
