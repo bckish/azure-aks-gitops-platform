@@ -11,7 +11,7 @@ resource "azurerm_linux_virtual_machine" "name" {
   }
   admin_ssh_key {
     username   = "ubuntu"
-    public_key = file("hashicorp_vm.pub")
+    public_key = var.ssh_public_key
   }
 
   source_image_reference {
@@ -22,5 +22,5 @@ resource "azurerm_linux_virtual_machine" "name" {
   }
 
   custom_data = base64encode(templatefile("${path.module}/tools-install.sh", {}))
-  depends_on = [azurerm_network_interface.nic]
+  depends_on  = [azurerm_network_interface.nic]
 }

@@ -13,9 +13,9 @@ provider "azurerm" {
 }
 
 provider "vault" {
-  address          = "http://13.93.146.203:8200"
+  address          = var.vault_address
   skip_child_token = true
-  alias = "approle"
+  alias            = "approle"
   auth_login {
     path = "auth/approle/login"
 
@@ -28,6 +28,6 @@ provider "vault" {
 
 provider "vault" {
   alias            = "main"
-  address          = "http://13.93.146.203:8200"
+  address          = var.vault_address
   skip_child_token = true
 }
