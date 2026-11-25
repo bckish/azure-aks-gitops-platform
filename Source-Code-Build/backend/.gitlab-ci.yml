@@ -11,14 +11,14 @@ stages:
 
 variables:
   DOCKER_DRIVER: overlay2
-  CI_DEBUG_TRACE: "true"
+  CI_DEBUG_TRACE: "false"
 
 Installing Dependency:
   stage: npm
   tags:
     - backend
   script:
-    - npm install
+    - npm ci
 
 
 # Checking Code Vulnerabilities
@@ -109,7 +109,7 @@ Image Pushing to ACR:
   image:
     name: docker:latest
   services:
-    - docker:bind
+    - docker:dind
   before_script:
     - echo "$BACKEND_ACR_PASSWORD" | docker login $BACKEND_ACR_USERNAME -u $BACKEND_ACR_REGISTRY --password-stdin
   script: 
