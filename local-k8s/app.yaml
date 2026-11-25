@@ -1,0 +1,218 @@
+# Disposable local Kind fixture only. Sample values are not production credentials.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: flux-task
+  labels:
+    role: api
+    env: demo
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 25%
+  selector:
+    matchLabels:
+      role: api
+  template:
+    metadata:
+      labels:
+        role: api
+    spec:
+      containers:
+      - name: api
+        image: bckish-local/azure-task-api:runtime
+        imagePullPolicy: Never
+        env:
+        - name: MONGO_CONN_STR
+          value: mongodb://mongodb-svc:27017/todo?authSource=admin
+        - name: USE_DB_AUTH
+          value: 'true'
+        - name: MONGO_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongo-sec
+              key: username
+        - name: MONGO_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongo-sec
+              key: password
+        ports:
+        - containerPort: 3500
+        livenessProbe:
+          httpGet:
+            path: /ok
+            port: 3500
+          initialDelaySeconds: 2
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3500
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          successThreshold: 1
+        resources:
+          requests:
+            memory: 64Mi
+          limits:
+            memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: flux-task
+spec:
+  ports:
+  - port: 3500
+    protocol: TCP
+  type: ClusterIP
+  selector:
+    role: api
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: flux-task
+  labels:
+    role: frontend
+    env: demo
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 25%
+  selector:
+    matchLabels:
+      role: frontend
+  template:
+    metadata:
+      labels:
+        role: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: bckish-local/azure-task-ui:runtime
+        imagePullPolicy: Never
+        env:
+        - name: REACT_APP_BACKEND_URL
+          value: http://127.0.0.1:23501/api/tasks
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            memory: 64Mi
+          limits:
+            memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: flux-task
+spec:
+  ports:
+  - port: 3000
+    protocol: TCP
+  type: ClusterIP
+  selector:
+    role: frontend
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  namespace: flux-task
+  name: mongodb
+spec:
+  serviceName: mongodb-svc
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+      - name: mon
+        image: mongo:7
+        ports:
+        - containerPort: 27017
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongo-sec
+              key: username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongo-sec
+              key: password
+        volumeMounts:
+        - name: mongo-volume
+          mountPath: /data/db
+        imagePullPolicy: Never
+        readinessProbe:
+          exec:
+            command:
+            - mongosh
+            - --quiet
+            - --eval
+            - db.adminCommand('ping').ok
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: 128Mi
+          limits:
+            memory: 768Mi
+  volumeClaimTemplates:
+  - metadata:
+      name: mongo-volume
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: flux-task
+  name: mongodb-svc
+spec:
+  selector:
+    app: mongodb
+  ports:
+  - name: mongodb-svc
+    protocol: TCP
+    port: 27017
+    targetPort: 27017
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mongo-sec
+  namespace: flux-task
+type: Opaque
+stringData:
+  username: localtest
+  password: local-smoke-only
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reconciliation-proof
+  namespace: flux-task
+data:
+  revision: v1

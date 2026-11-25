@@ -50,3 +50,24 @@ npm start
 ```
 
 The UI defaults to http://127.0.0.1:3500/api/tasks in local mode. Set REACT_APP_BACKEND_URL when deploying it elsewhere. No cloud deployment is performed.
+
+## Verified local Kubernetes and Flux results
+
+Test date: 25 November 2026. Environment: Docker Desktop on Apple Silicon, Kind v0.30.0, Kubernetes v1.34.3. Local images were imported into the isolated cluster; no images were pushed to a registry and no paid cloud resources were created.
+
+Tested code: `71b621d` (merged main). The actual frontend/backend Docker builds and MongoDB 7 were deployed into Kind using a local StatefulSet and dynamic storage. The frontend and API were ready, and real MongoDB task create/read/update/delete passed before and after GitOps reconciliation.
+
+Flux v2.2.3 (source-controller v1.2.4 and kustomize-controller v1.2.2 from this repository) reconciled a disposable local Git repository. Both GitRepository and Kustomization reported **Ready=True**. Revision `dcc5f41` deployed one API replica; revision `2e8ab9e` updated a proof ConfigMap and scaled the API to two ready replicas. Flux restored two healthy replicas after manual scale drift to one.
+
+Use the [local Kubernetes fixture](local-k8s/) with a disposable Kind cluster, not the inherited Azure/Flux source:
+
+```bash
+docker build -t bckish-local/azure-task-api:runtime Source-Code-Build/backend
+docker build -t bckish-local/azure-task-ui:runtime Source-Code-Build/frontend
+docker pull mongo:7
+kind load docker-image --name YOUR_LOCAL_KIND bckish-local/azure-task-api:runtime bckish-local/azure-task-ui:runtime mongo:7
+kubectl --kubeconfig /path/to/local-kind.kubeconfig create namespace flux-task
+kubectl --kubeconfig /path/to/local-kind.kubeconfig apply -k local-k8s
+```
+
+If needed on ARM64, export the platform-specific image archive with `docker image save --platform linux/arm64` and load it using `kind load image-archive`. Forward local API/UI ports 23501/23301. The successful local reconciliation does not establish live AKS, ACR, Vault, GitLab or Azure ingress operation.
