@@ -28,7 +28,7 @@ function mongoStore() {
     return {
         list: () => Task.find(),
         add: data => new Task(data).save(),
-        update: (id, data) => Task.findByIdAndUpdate(id, data, { new: true, runValidators: true }),
+        update: (id, data) => Task.findByIdAndUpdate(id, data, { returnDocument: "after", runValidators: true }),
         remove: id => Task.findByIdAndDelete(id)
     };
 }

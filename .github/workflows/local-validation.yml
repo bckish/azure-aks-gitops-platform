@@ -12,7 +12,7 @@ jobs:
           node-version: '22'
       - name: Backend tests
         working-directory: Source-Code-Build/backend
-        run: npm ci && npm test
+        run: npm ci && NODE_OPTIONS=--throw-deprecation npm test
       - name: Frontend build
         working-directory: Source-Code-Build/frontend
         run: npm ci && npm run build

@@ -25,6 +25,8 @@ done
 
 Dependencies and Terraform providers require network access. For deployment, supply your own Azure subscription, storage backend, SSH public key, GitLab runners and masked variables, Vault roles, registry and image references. The Flux repository and credentials must point to your own GitOps repository with matching paths. The included GitLab files represent separate pipeline roots; review them before importing. Application pipelines use lockfile installs and block on image scan findings; registry publication is manual. Manifest updates should be proposed separately in your own GitOps repository, not pushed to an inherited repository. Do not execute their manual apply/destroy jobs against a shared environment. No Azure infrastructure is deployed by the local checks.
 
+The AKS root no longer calls the deprecated Vault KV data source. Retrieve the service-principal values through your own approved Vault/secret-injection workflow, then provide masked `TF_VAR_aks_client_id` and `TF_VAR_aks_client_secret` environment variables to Terraform and GitLab. Never commit or log them. The AzureRM service-principal fields are not write-only, so sensitive plan and state storage must still be protected. The separate Vault VM lab remains intact.
+
 See the original [architecture walkthrough](https://medium.com/@amanpathakdevops/advanced-end-to-end-devsecops-kubernetes-three-tier-project-using-azure-aks-fluxcd-prometheus-cca3c5e61953).
 
 ## Attribution and license
@@ -71,3 +73,9 @@ kubectl --kubeconfig /path/to/local-kind.kubeconfig apply -k local-k8s
 ```
 
 If needed on ARM64, export the platform-specific image archive with `docker image save --platform linux/arm64` and load it using `kind load image-archive`. Forward local API/UI ports 23501/23301. The successful local reconciliation does not establish live AKS, ACR, Vault, GitLab or Azure ingress operation.
+
+## Dependency maintenance (26 November 2026)
+
+Migrated the API to Mongoose 8.24.11, replaced deprecated Material UI v4 controls with native React form controls, and refreshed compatible backend transitive dependencies. Clean npm installs, production build, strict Node API tests, and Terraform validation passed. Rebuilt Docker images passed authenticated MongoDB 7 CRUD and browser tests without browser errors or deprecation warnings. CI now rejects Node deprecation warnings during API tests. No Azure resources were created.
+
+The rebuilt images also passed MongoDB-backed CRUD in local Kind. Flux v2.2.3 reconciled revisions `ba89310` and `08232e4`, restored two ready API replicas after deliberate drift, and both GitRepository and Kustomization returned Ready=True.

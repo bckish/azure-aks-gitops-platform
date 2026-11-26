@@ -1,5 +1,2 @@
-data "vault_kv_secret_v2" "example" {
-  provider = vault.approle
-  mount    = "secrets"
-  name     = "az-aks"
-}
+# Supply service principal credentials through sensitive Terraform input variables.
+# Vault retrieval belongs in the operator's approved secret-injection workflow.
