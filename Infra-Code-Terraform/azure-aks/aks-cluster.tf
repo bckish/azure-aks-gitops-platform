@@ -22,12 +22,8 @@ resource "azurerm_kubernetes_cluster" "cluster" {
     load_balancer_sku = "standard"
   }
 
-  # service_principal {
-  #   client_id     = var.client_id
-  #   client_secret = var.client_secret
-  # }
   service_principal {
-    client_id     = data.vault_kv_secret_v2.example.data["client_id"]
-    client_secret = data.vault_kv_secret_v2.example.data["client_secret"]
+    client_id     = var.aks_client_id
+    client_secret = var.aks_client_secret
   }
 }

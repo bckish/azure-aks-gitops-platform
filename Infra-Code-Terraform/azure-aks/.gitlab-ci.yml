@@ -27,7 +27,8 @@ Running the Plan:
   tags:
     - aks
   script:
-    - terraform plan -var="role_id=$VAULT_ROLE_ID" -var="secret_id=$VAULT_SECRET_ID" -var-file="$ENV.tfvars"
+    - test -n "$TF_VAR_aks_client_id" && test -n "$TF_VAR_aks_client_secret"
+    - terraform plan -var-file="$ENV.tfvars"
 
 
 Running the Apply:
@@ -36,7 +37,7 @@ Running the Apply:
     - aks
   script:
     - if [[ "$TERRAFORM_ACTION" == "apply" ]]; then
-        terraform apply -var="role_id=${VAULT_ROLE_ID}" -var="secret_id=${VAULT_SECRET_ID}" -auto-approve -var-file=$ENV.tfvars;
+        terraform apply -auto-approve -var-file="$ENV.tfvars";
       fi
   when: manual
 
@@ -50,7 +51,7 @@ Running the Destroy:
     - aks
   script:
     - if [[ "$TERRAFORM_ACTION" == "destroy" ]]; then
-        terraform destroy -var="role_id=${VAULT_ROLE_ID}" -var="secret_id=${VAULT_SECRET_ID}" -auto-approve -var-file=$ENV.tfvars;
+        terraform destroy -auto-approve -var-file="$ENV.tfvars";
       fi
   when: manual
   

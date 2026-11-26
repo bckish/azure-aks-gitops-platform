@@ -6,9 +6,13 @@ variable "ssh_key" {
 variable "cluster-name" {}
 variable "acr-name" {}
 variable "acr-name2" {}
-variable "role_id" {}
-variable "secret_id" {}
-variable "vault_address" {
+variable "aks_client_id" {
   type        = string
-  description = "HTTPS address of the operator's Vault instance."
+  description = "AKS service principal client ID from an approved secret-injection workflow."
+  sensitive   = true
+}
+variable "aks_client_secret" {
+  type        = string
+  description = "AKS service principal secret; protect Terraform state because the provider stores it."
+  sensitive   = true
 }

@@ -1,7 +1,6 @@
 import React from "react";
 import Tasks from "./Tasks";
-import { Paper, TextField, Checkbox, Button } from "@material-ui/core";
-import "./App.css"; // Update your CSS file accordingly
+import "./App.css";
 
 class App extends Tasks {
     state = { tasks: [], currentTask: "" };
@@ -14,39 +13,40 @@ class App extends Tasks {
                     <h1>My To-Do List</h1>
                 </header>
                 <div className="main-content">
-                    <Paper elevation={3} className="todo-container">
+                    <section className="todo-container" aria-label="Task list">
                         <form onSubmit={this.handleSubmit} className="task-form">
-                            <TextField
-                                variant="outlined"
-                                size="small"
+                            <input
+                                type="text"
+                                aria-label="New task"
                                 className="task-input"
                                 value={currentTask}
                                 required={true}
                                 onChange={this.handleChange}
                                 placeholder="Add New TO-DO"
                             />
-                            <Button className="add-task-btn" color="primary" variant="outlined" type="submit">
+                            <button className="add-task-btn" type="submit">
                                 Add Task
-                            </Button>
+                            </button>
                         </form>
                         <div className="tasks-list">
                             {tasks.map((task) => (
-                                <Paper key={task._id} className="task-item">
-                                    <Checkbox
+                                <div key={task._id} className="task-item">
+                                    <input
+                                        type="checkbox"
+                                        aria-label={`Mark ${task.task} complete`}
                                         checked={task.completed}
-                                        onClick={() => this.handleUpdate(task._id)}
-                                        color="primary"
+                                        onChange={() => this.handleUpdate(task._id)}
                                     />
                                     <div className={task.completed ? "task-text completed" : "task-text"}>
                                         {task.task}
                                     </div>
-                                    <Button onClick={() => this.handleDelete(task._id)} color="secondary" className="delete-task-btn">
+                                    <button type="button" onClick={() => this.handleDelete(task._id)} className="delete-task-btn">
                                         Delete
-                                    </Button>
-                                </Paper>
+                                    </button>
+                                </div>
                             ))}
                         </div>
-                    </Paper>
+                    </section>
                 </div>
             </div>
         );
